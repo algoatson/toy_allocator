@@ -12,8 +12,6 @@ use chunk::{
 use utils::align_up;
 use error::AllocError;
 
-const MAGIC: u64 = 0xDEADBEEFDEADBEEF;
-
 pub struct Arena {
     buf: Vec<u8>,
     offset: usize,
