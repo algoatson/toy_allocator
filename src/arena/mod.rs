@@ -38,6 +38,17 @@ impl Arena {
         !ptr.is_null() && ptr.is_aligned()
     }
 
+    pub fn dump(&self) {
+        for (i, chunk) in self.chunks().enumerate() {
+            println!(
+                "#{i}: size={} allocated={} state={:?}",
+                chunk.requested_size,
+                chunk.allocated_size,
+                chunk.state
+            );
+        }
+    }
+
     fn try_alloc(&mut self, size: usize) -> Result<*mut u8, AllocError> {
         // each allocation is padded by ChunkHeader
         // and are 16-byte aligned

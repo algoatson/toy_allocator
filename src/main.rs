@@ -16,12 +16,5 @@ fn main() {
     arena.free(x).expect("failed to free");
     // arena.free(x).expect("failed to free"); // double free
 
-    for (idx, chunk) in arena.chunks().enumerate() {
-        println!(
-            "chunk #{} -> {{ (size: {:#x}, state: {:?}) }}",
-            idx,
-            chunk.allocated_size,
-            chunk.state
-        )
-    }
+    arena.dump();
 }
