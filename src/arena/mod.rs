@@ -34,7 +34,7 @@ impl Arena {
         {
             println!("arena cookie: {:#x}", cookie);
         }
-        
+
         Self {
             buf: vec![0; align_up(size, 16)],
             offset: 0,
@@ -57,10 +57,11 @@ impl Arena {
     pub fn dump(&self) {
         for (i, chunk) in self.chunks().enumerate() {
             println!(
-                "#{i}: size={} allocated={} state={:?}",
+                "#{i}: size={} allocated={} state={:?} magic={:#x}",
                 chunk.requested_size,
                 chunk.allocated_size,
-                chunk.state
+                chunk.state,
+                chunk.magic
             );
         }
     }

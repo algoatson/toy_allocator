@@ -127,6 +127,7 @@ pub struct ChunkInfo {
     pub requested_size: usize,
     pub allocated_size: usize,
     pub state: ChunkState,
+    pub magic: u64,
 }
 
 pub(crate) struct ChunkIter<'a> {
@@ -159,6 +160,7 @@ impl<'a> Iterator for ChunkIter<'a> {
             requested_size: header.requested_size(),
             allocated_size: header.allocated_size(),
             state: header.chunk_state(),
+            magic: header.magic,
         })
     }
 }
