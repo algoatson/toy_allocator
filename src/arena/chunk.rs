@@ -33,12 +33,58 @@ pub(crate) struct ChunkHeader {
 }
 
 impl ChunkHeader {
-    pub fn new(size: usize, allocated_size: usize) -> Self {
+    // pub fn new(size: usize, allocated_size: usize) -> Self {
+    //     Self {
+    //         magic: MAGIC,
+    //         size_flags: allocated_size | ChunkState::Allocated as usize,
+    //         requested_size: size,
+    //     }
+    // }
+
+    fn calculate_magic(
+        secret: u64,
+        addr: usize,
+        requested_size: usize,
+        allocated_size: usize,
+    ) -> u64 {
+        let mut magic = secret;
+
+        magic ^= addr as u64;
+        magic ^= requested_size as u64;
+        magic ^= allocated_size as u64;
+
+        magic.rotate_left(13)
+    }
+
+    pub fn new(
+        secret: u64,
+        addr: usize,
+        size: usize,
+        allocated_size: usize
+    ) -> Self {
+        let magic = Self::calculate_magic(
+            secret,
+            addr,
+            size,
+            allocated_size
+        );
+
         Self {
-            magic: MAGIC,
+            magic,
             size_flags: allocated_size | ChunkState::Allocated as usize,
             requested_size: size,
         }
+    }
+
+    pub(crate) fn is_valid(&self, secret: u64, addr: usize) -> bool {
+        let expected = Self::calculate_magic(
+            secret, 
+            addr, 
+            self.requested_size(), 
+            self.allocated_size()
+        );
+
+        self.magic == expected
     }
     
     pub(crate) fn requested_size(&self) -> usize {
@@ -51,10 +97,6 @@ impl ChunkHeader {
 
     pub(crate) fn flags(&self) -> usize {
         self.size_flags & STATE_MASK
-    }
-
-    pub(crate) fn is_valid(&self) -> bool {
-        self.magic == MAGIC
     }
 
     pub(crate) fn chunk_state(&self) -> ChunkState {

@@ -2,6 +2,8 @@ mod chunk;
 mod error;
 mod utils;
 
+use std::os::raw;
+
 use chunk::{
     ChunkHeader, ChunkInfo, ChunkIter, ChunkState, FreeChunk,
     chunk_to_mem, mem_to_chunk
@@ -16,14 +18,28 @@ pub struct Arena {
     buf: Vec<u8>,
     offset: usize,
     free_list: *mut FreeChunk,
+    cookie: u64,
 }
 
 impl Arena {
     pub fn new(size: usize) -> Self {
+        let mut bytes = [0u8; 8];
+
+        getrandom::fill(&mut bytes)
+            .expect("failed to generate random cookie");
+
+        let cookie = u64::from_ne_bytes(bytes);
+
+        #[cfg(debug_assertions)]
+        {
+            println!("arena cookie: {:#x}", cookie);
+        }
+        
         Self {
             buf: vec![0; align_up(size, 16)],
             offset: 0,
             free_list: std::ptr::null_mut(),
+            cookie,
         }
     }
 
@@ -101,7 +117,13 @@ impl Arena {
 
         unsafe {
             (chunk as *mut ChunkHeader).write(
-                ChunkHeader::new(size, total));
+                ChunkHeader::new(
+                    self.cookie, 
+                    chunk as usize, 
+                    size, 
+                    total
+                )
+            );
         }
 
         self.offset += total;
@@ -128,7 +150,7 @@ impl Arena {
         let header = unsafe { &mut *raw_header };
 
         // validate magic bytes
-        if !header.is_valid() {
+        if !header.is_valid(self.cookie, raw_header as usize) {
             // if the magic-bytes are invalid, it means our chunk
             // is in a corrupted state.
             header.set_state(ChunkState::Corrupted);
@@ -168,5 +190,16 @@ impl Arena {
                 Err(AllocError::CorruptedChunk)
             }
         }
+    }
+
+    fn make_cookie(
+        arena_cookie: u64,
+        addr: usize,
+        size: usize
+    ) -> u64 {
+        (arena_cookie
+            ^ addr as u64
+            ^ size as u64)
+            .rotate_left(17)
     }
 }
