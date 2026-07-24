@@ -88,7 +88,17 @@ impl Arena {
 
         // 2. performance: 
         // if we have a large number of free chunks, we will have to walk the entire free-list to find
-        //  a chunk that is big enough to serve the allocation.
+        // a chunk that is big enough to serve the allocation.
+        
+        // ===
+
+        // this is why malloc uses the concept of bins, where free chunks are organized into bins based 
+        // on their size. This allows for faster allocation and deallocation, as we can quickly find a 
+        // chunk of the appropriate size without having to walk the entire free-list.
+
+        // our arena should probably implement a similar concept, where we have a free-list for each size 
+        // class, and we can quickly find a chunk of the appropriate size without having to walk the entire 
+        // free-list.
 
         while !current.is_null() {
             unsafe {

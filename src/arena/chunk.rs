@@ -31,13 +31,6 @@ pub(crate) struct ChunkHeader {
 }
 
 impl ChunkHeader {
-    // pub fn new(size: usize, allocated_size: usize) -> Self {
-    //     Self {
-    //         magic: MAGIC,
-    //         size_flags: allocated_size | ChunkState::Allocated as usize,
-    //         requested_size: size,
-    //     }
-    // }
 
     #[inline]
     fn calculate_magic(
@@ -115,10 +108,12 @@ impl ChunkHeader {
     }
 }
 
+#[inline(always)]
 pub fn chunk_to_mem(ptr: *mut ChunkHeader) -> *mut u8 {
     unsafe { ptr.add(1) as *mut u8 }
 }
 
+#[inline(always)]
 pub fn mem_to_chunk(ptr: *mut u8) -> *mut ChunkHeader {
     unsafe { ptr.sub(size_of::<ChunkHeader>()) as *mut ChunkHeader }
 }
@@ -163,6 +158,7 @@ impl<'a> Iterator for ChunkIter<'a> {
             magic: header.magic,
         })
     }
+    
 }
 
 // free_list
