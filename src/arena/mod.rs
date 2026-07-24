@@ -2,8 +2,6 @@ mod chunk;
 mod error;
 mod utils;
 
-use std::os::raw;
-
 use chunk::{
     ChunkHeader, ChunkInfo, ChunkIter, ChunkState, FreeChunk,
     chunk_to_mem, mem_to_chunk
@@ -73,6 +71,24 @@ impl Arena {
         );
 
         let mut current = self.free_list;
+
+
+        // walk the free-list and find a chunk-big enough to serve
+        // the allocation, however this brings a couple of issues:
+        
+        // 1. fragmentation: 
+        // if we have a 64-byte chunk and the user requests 32 bytes, we can serve the allocation
+        // but we will have a 32-byte chunk left over. This is not a problem if we can split the 
+        // chunk into two chunks, but if the remaining chunk is too small to be useful, then we will 
+        // have wasted memory.
+    
+        // we would need to implement a "split" function that takes a chunk and splits it into two chunks, 
+        // one of which is the requested size and the other is the remaining size. The remaining chunk 
+        // would then be added back to the free-list.
+
+        // 2. performance: 
+        // if we have a large number of free chunks, we will have to walk the entire free-list to find
+        //  a chunk that is big enough to serve the allocation.
 
         while !current.is_null() {
             unsafe {
@@ -189,16 +205,5 @@ impl Arena {
                 Err(AllocError::CorruptedChunk)
             }
         }
-    }
-
-    fn make_cookie(
-        arena_cookie: u64,
-        addr: usize,
-        size: usize
-    ) -> u64 {
-        (arena_cookie
-            ^ addr as u64
-            ^ size as u64)
-            .rotate_left(17)
     }
 }

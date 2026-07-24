@@ -1,7 +1,5 @@
 use super::Arena;
 
-const MAGIC: u64 = 0xDEADBEEFDEADBEEF;
-
 const STATE_BITS: usize = 2;
 const STATE_MASK: usize = (1 << STATE_BITS) - 1;
 
@@ -41,6 +39,7 @@ impl ChunkHeader {
     //     }
     // }
 
+    #[inline]
     fn calculate_magic(
         secret: u64,
         addr: usize,
@@ -76,6 +75,7 @@ impl ChunkHeader {
         }
     }
 
+    #[inline]
     pub(crate) fn is_valid(&self, secret: u64, addr: usize) -> bool {
         let expected = Self::calculate_magic(
             secret, 
@@ -180,7 +180,7 @@ impl<'a> Iterator for ChunkIter<'a> {
 
 #[repr(C)]
 pub(crate) struct FreeChunk {
-    pub(crate) header: ChunkHeader,
+    pub(crate) header: ChunkHeader, 
     pub(crate) next: *mut FreeChunk,
     pub(crate) prev: *mut FreeChunk,
 }
